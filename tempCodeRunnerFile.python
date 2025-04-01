@@ -1,0 +1,13 @@
+import openai
+
+# Use the new ChatCompletion API
+response = openai.ChatCompletion.create(
+    model="gpt-3.5-turbo",  # Specify the model
+    messages=[
+        {"role": "system", "content": "You are a helpful assistant."},
+        {"role": "user", "content": "Your question or prompt here"}
+    ],
+    max_tokens=50
+)
+print(response['choices'][0]['message']['content'])
+
