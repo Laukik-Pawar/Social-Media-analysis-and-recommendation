@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Cluster Visualization</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/wordcloud@1.1.0/dist/wordcloud2.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            margin: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        .chart-container {
+            width: 80%;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        #pieChart, #clusterChart, #heatmap {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        .cluster-info {
+            text-align: left;
+            margin-top: 30px;
+            font-size: 16px;
+            color: #555;
+        }
+        .cluster-info ul {
+            padding-left: 20px;
+        }
+        .word-cloud-container {
+            margin: 30px auto;
+            width: 70%;
+        }
+        .time-series-container {
+            margin: 30px auto;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Enhanced Cluster Visualization and Analysis</h1>
+
+        <!-- Display Cluster Information and Genre Mapping -->
+        <div class="cluster-info">
+            <h2>Cluster Genre Assignments</h2>
+            <ul>
+                {% for cluster, genre in genres.items() %}
+                    <li><strong>Cluster {{ loop.index0 }}:</strong> {{ genre }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <!-- Display Cluster Distribution Bar Chart -->
+        <div class="chart-container">
+            <canvas id="clusterChart"></canvas>
+        </div>
+
+        <!-- Display Cluster Proportion Pie Chart -->
+        <div class="chart-container">
+            <canvas id="pieChart"></canvas>
+        </div>
+
+        <!-- Display Word Cloud for Each Cluster -->
+        <div class="word-cloud-container">
+            <h2>Word Cloud for Each Cluster</h2>
+            {% for cluster, terms in cluster_terms.items() %}
+                <div id="wordCloud{{ loop.index0 }}" style="width: 100%; height: 300px; margin-bottom: 20px;"></div>
+                <script>
+                    const words{{ loop.index0 }} = {{ terms|tojson }};
+                    const wordList{{ loop.index0 }} = words{{ loop.index0 }}.map(term => ({ text: term, weight: 10 }));
+                    WordCloud(document.getElementById('wordCloud{{ loop.index0 }}'), { list: wordList{{ loop.index0 }} });
+                </script>
+            {% endfor %}
+        </div>
+
+        <!-- Time-based analysis -->
+        <div class="time-series-container">
+            <h2>Cluster Trends Over Time</h2>
+            <canvas id="timeSeriesChart"></canvas>
+        </div>
+
+        <!-- Similarity Heatmap -->
+        <div class="chart-container">
+            <h2>Cluster Similarity Heatmap</h2>
+            <canvas id="heatmap"></canvas>
+        </div>
+
+    </div>
+
+    <script>
+        // Get data passed from Flask into JavaScript variables
+        const clusterDistribution = {{ cluster_distribution|tojson }};
+        const genres = {{ genres|tojson }};
+        const timeSeriesData = {{ time_series_data|tojson }};
+        const clusterSimilarityData = {{ cluster_similarity_data|tojson }};
+
+        // Prepare data for the cluster distribution bar chart
+        const clusterLabels = Object.keys(clusterDistribution);
+        const clusterValues = Object.values(clusterDistribution);
+
+        // Create the bar chart for cluster distribution
+        const ctxBar = document.getElementById('clusterChart').getContext('2d');
+        new Chart(ctxBar, {
+            type: 'bar',
+            data: {
+                labels: clusterLabels,
+                datasets: [{
+                    label: 'Cluster Distribution',
+                    data: clusterValues,
+                    backgroundColor: '#4e73df',
+                    borderColor: '#4e73df',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Cluster'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Count'
+                        },
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Create the pie chart for cluster proportions
+        const ctxPie = document.getElementById('pieChart').getContext('2d');
+        new Chart(ctxPie, {
+            type: 'pie',
+            data: {
+                labels: clusterLabels,
+                datasets: [{
+                    label: 'Cluster Proportion',
+                    data: clusterValues,
+                    backgroundColor: ['#ff5733', '#33ff57', '#3357ff', '#f1c40f', '#9b59b6'],
+                    borderColor: ['#fff', '#fff', '#fff', '#fff', '#fff'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true
+            }
+        });
+
+        // Create time series chart for trends over time
+        const ctxTimeSeries = document.getElementById('timeSeriesChart').getContext('2d');
+        new Chart(ctxTimeSeries, {
+            type: 'line',
+            data: {
+                labels: Object.keys(timeSeriesData),
+                datasets: [{
+                    label: 'Term Frequency Over Time',
+                    data: Object.values(timeSeriesData),
+                    borderColor: '#f39c12',
+                    fill: false,
+                    tension: 0.1
+                }]
+            },
+            options: {
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Time'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Frequency'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Create heatmap for cluster similarity
+        const ctxHeatmap = document.getElementById('heatmap').getContext('2d');
+        new Chart(ctxHeatmap, {
+            type: 'matrix',
+            data: {
+                labels: clusterLabels,
+                datasets: [{
+                    label: 'Cluster Similarity',
+                    data: clusterSimilarityData,
+                    backgroundColor: function(context) {
+                        var value = context.dataset.data[context.dataIndex];
+                        return value > 0.5 ? '#2ecc71' : '#e74c3c';
+                    },
+                    borderColor: '#fff',
+                    borderWidth: 1
+                }]
+            }
+        });
+    </script>
+
+</body>
+</html>

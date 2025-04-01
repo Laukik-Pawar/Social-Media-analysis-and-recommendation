@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Select Your Interests</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .interests-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .interest-item {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .interest-item:hover {
+            background-color: #e9ecef;
+        }
+        .interest-item.selected {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .submit-btn {
+            background-color: #2196F3;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+        .submit-btn:hover {
+            background-color: #1976D2;
+        }
+        .search-box {
+            width: 100%;
+            max-width: 400px;
+            padding: 10px;
+            margin: 20px auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Select Your Interests</h1>
+        <p>Help us provide better recommendations by selecting your interests (choose at least 3)</p>
+        
+        <input type="text" class="search-box" placeholder="Search interests..." id="searchBox">
+        
+        <form action="/save_preferences" method="POST" id="preferencesForm">
+            <div class="interests-grid" id="interestsGrid">
+                <!-- Interests will be populated by JavaScript -->
+            </div>
+            <button type="submit" class="submit-btn" id="submitBtn" disabled>Continue to Recommendations</button>
+        </form>
+    </div>
+
+    <script>
+        const interests = [
+            "Technology", "Programming", "Web Development", "Mobile Apps",
+            "Artificial Intelligence", "Data Science", "Cybersecurity",
+            "Gaming", "Entertainment", "Movies", "Music", "Books",
+            "Sports", "Fitness", "Health", "Nutrition",
+            "Business", "Entrepreneurship", "Finance", "Investment",
+            "Education", "Science", "Space", "Environment",
+            "Travel", "Photography", "Art", "Design",
+            "Food", "Cooking", "Fashion", "Lifestyle",
+            "News", "Politics", "History", "Philosophy"
+        ];
+
+        const interestsGrid = document.getElementById('interestsGrid');
+        const searchBox = document.getElementById('searchBox');
+        const submitBtn = document.getElementById('submitBtn');
+        let selectedInterests = new Set();
+
+        function createInterestItems(filteredInterests = interests) {
+            interestsGrid.innerHTML = '';
+            filteredInterests.forEach(interest => {
+                const div = document.createElement('div');
+                div.className = 'interest-item';
+                if (selectedInterests.has(interest)) {
+                    div.className += ' selected';
+                }
+                div.textContent = interest;
+                div.onclick = () => toggleInterest(interest, div);
+                interestsGrid.appendChild(div);
+            });
+        }
+
+        function toggleInterest(interest, element) {
+            if (selectedInterests.has(interest)) {
+                selectedInterests.delete(interest);
+                element.classList.remove('selected');
+            } else {
+                selectedInterests.add(interest);
+                element.classList.add('selected');
+            }
+            submitBtn.disabled = selectedInterests.size < 3;
+        }
+
+        searchBox.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const filteredInterests = interests.filter(interest => 
+                interest.toLowerCase().includes(searchTerm)
+            );
+            createInterestItems(filteredInterests);
+        });
+
+        document.getElementById('preferencesForm').onsubmit = (e) => {
+            e.preventDefault();
+            const formData = new FormData();
+            formData.append('interests', JSON.stringify(Array.from(selectedInterests)));
+            fetch('/save_preferences', {
+                method: 'POST',
+                body: formData
+            }).then(response => {
+                if (response.ok) {
+                    window.location.href = '/recommendations';
+                }
+            });
+        };
+
+        // Initial render
+        createInterestItems();
+    </script>
+</body>
+</html> 

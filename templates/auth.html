@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .auth-container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        h1, h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        h1 {
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: bold;
+        }
+        input[type="text"],
+        input[type="password"],
+        input[type="file"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #1a73e8;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #1557b0;
+        }
+        .error {
+            color: #d93025;
+            margin-top: 5px;
+            font-size: 14px;
+        }
+        .success {
+            color: #188038;
+            margin-top: 5px;
+            font-size: 14px;
+        }
+        .info-text {
+            color: #666;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .help-text {
+            font-size: 13px;
+            color: #666;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <h1>Authentication Setup</h1>
+        
+        <form id="authForm">
+            <div class="section">
+                <h2>Reddit Credentials</h2>
+                <div class="form-group">
+                    <label for="reddit_client_id">Client ID</label>
+                    <input type="text" id="reddit_client_id" name="reddit_client_id" required>
+                    <div class="help-text">Found in your Reddit application settings</div>
+                </div>
+                <div class="form-group">
+                    <label for="reddit_client_secret">Client Secret</label>
+                    <input type="password" id="reddit_client_secret" name="reddit_client_secret" required>
+                    <div class="help-text">Found in your Reddit application settings</div>
+                </div>
+                <div class="form-group">
+                    <label for="reddit_username">Username</label>
+                    <input type="text" id="reddit_username" name="reddit_username" required>
+                </div>
+                <div class="form-group">
+                    <label for="reddit_password">Password</label>
+                    <input type="password" id="reddit_password" name="reddit_password" required>
+                </div>
+                <p class="info-text">Your Reddit credentials will be stored securely in your session and will be cleared when you log out or close your browser.</p>
+            </div>
+
+            <div class="section">
+                <h2>YouTube Authentication</h2>
+                <div class="form-group">
+                    <label for="youtube_client_secret">Client Secret JSON File</label>
+                    <input type="file" id="youtube_client_secret" name="youtube_client_secret" accept=".json" required>
+                    <div class="help-text">Upload the client_secret.json file from your Google Cloud Console</div>
+                </div>
+                <p class="info-text">The file will be stored temporarily and automatically deleted after 1 hour.</p>
+            </div>
+
+            <button type="submit">Submit Credentials</button>
+            <div id="message"></div>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('authForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const messageDiv = document.getElementById('message');
+            
+            try {
+                const response = await fetch('/submit_credentials', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    messageDiv.className = 'success';
+                    messageDiv.textContent = data.message;
+                    // Redirect to index page after successful authentication
+                    setTimeout(() => window.location.href = '/', 1500);
+                } else {
+                    messageDiv.className = 'error';
+                    messageDiv.textContent = data.error;
+                }
+            } catch (error) {
+                messageDiv.className = 'error';
+                messageDiv.textContent = 'An error occurred while submitting credentials.';
+            }
+        });
+
+        // Check authentication status periodically
+        setInterval(async () => {
+            try {
+                const response = await fetch('/check_auth');
+                const data = await response.json();
+                
+                if (!data.reddit_authenticated || !data.youtube_authenticated) {
+                    // Refresh the page if authentication has expired
+                    window.location.reload();
+                }
+            } catch (error) {
+                console.error('Error checking authentication status:', error);
+            }
+        }, 5 * 60 * 1000); // Check every 5 minutes
+    </script>
+</body>
+</html> 

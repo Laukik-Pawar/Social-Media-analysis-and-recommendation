@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Social Media Recommendations{% endblock %}
+
+{% block content %}
+<h1>Social Media Recommendations</h1>
+<div class="nav-buttons">
+    <form action="/process" method="POST">
+        <button type="submit">Process Viewed Content</button>
+    </form>
+    <form action="/time_based_filter" method="GET">
+        <button type="submit" class="nav-button">View Time-Based Content</button>
+    </form>
+</div>
+{% endblock %}

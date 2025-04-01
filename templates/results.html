@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}Search Results{% endblock %}
+
+{% block content %}
+<div class="nav-buttons">
+    <a href="/visualize" class="nav-button">Visualize Cluster Patterns</a>
+</div>
+
+<h1>Search Results</h1>
+
+{% for cluster, terms in results.items() %}
+<div class="card">
+    <h2>Cluster {{ cluster }}</h2>
+    <h3>Recommendations for: {{ cluster_terms[cluster] | join(', ') }}</h3>
+    
+    {% for term, links in terms.items() %}
+    <div class="card">
+        <h3>Recommendations Similar to: {{ term }}</h3>
+        <ul id="term-{{ term }}">
+            {% for title, link in links %}
+            <li>
+                <a href="{{ link }}" target="_blank">{{ title }}</a>
+            </li>
+            {% endfor %}
+        </ul>
+        <button onclick="loadMoreResults('{{ term }}', '{{ cluster }}')">Load More Results</button>
+    </div>
+    {% endfor %}
+</div>
+{% endfor %}
+
+<div class="loading" id="loading">Loading...</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let pageNumbers = {};
+
+    function loadMoreResults(term, cluster) {
+        if (!pageNumbers[term]) {
+            pageNumbers[term] = 1;
+        }
+        pageNumbers[term]++;
+
+        document.getElementById('loading').style.display = 'block';
+
+        fetch(`/new_search_results?search_term=${encodeURIComponent(term)}&page=${pageNumbers[term]}`)
+            .then(response => response.json())
+            .then(data => {
+                const container = document.getElementById(`term-${term}`);
+                data.results.forEach(([title, link]) => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<a href="${link}" target="_blank">${title}</a>`;
+                    container.appendChild(li);
+                });
+                document.getElementById('loading').style.display = 'none';
+            })
+            .catch(error => {
+                console.error('Error loading more results:', error);
+                document.getElementById('loading').style.display = 'none';
+            });
+    }
+</script>
+{% endblock %}

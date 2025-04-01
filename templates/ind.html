@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Liked Videos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 30px;
+        }
+        .video {
+            border-bottom: 1px solid #ccc;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+        }
+        .video h3 {
+            color: #1a73e8;
+        }
+        .video a {
+            text-decoration: none;
+            color: #1a73e8;
+        }
+        .video p {
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <h1>YouTube Liked Videos</h1>
+    {% if videos %}
+        {% for video in videos %}
+            <div class="video">
+                <h3>{{ video.title }}</h3>
+                <a href="{{ video.url }}" target="_blank">Watch Video</a>
+                <p>Channel: {{ video.channel }}</p>
+                <p>Published At: {{ video.timestamp }}</p>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>No liked videos found.</p>
+    {% endif %}
+</body>
+</html>

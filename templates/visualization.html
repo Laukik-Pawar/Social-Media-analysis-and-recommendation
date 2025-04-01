@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cluster Visualization</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            margin: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        .chart-container {
+            width: 50%;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        #pieChart, #barChart {
+            max-width: 300px;
+            margin: 0 auto;
+        }
+        .cluster-info {
+            text-align: left;
+            margin-top: 30px;
+            font-size: 16px;
+            color: #555;
+        }
+        .cluster-info ul {
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Cluster Visualization and Genre Assignment</h1>
+
+        <!-- Display Cluster Information and Genre Mapping -->
+        <div class="cluster-info">
+            <h2>Cluster Genre Assignments</h2>
+            <ul>
+                {% for cluster, genre in genres.items() %}
+                    <li><strong>Cluster {{ loop.index0 }}:</strong> {{ genre }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <!-- Display Most Frequent Terms per Cluster -->
+        <div class="cluster-info">
+            <h2>Most Frequent Terms per Cluster</h2>
+            <ul>
+                {% for cluster, terms in cluster_terms.items() %}
+                    <li><strong>Cluster {{ loop.index0 }}:</strong> {{ ", ".join(terms) }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <!-- Display Cluster Distribution Bar Chart -->
+        <div class="chart-container">
+            <canvas id="clusterChart"></canvas>
+        </div>
+
+        <!-- Display Average Time Spent per Cluster Bar Chart -->
+        <div class="chart-container">
+            <canvas id="timeChart"></canvas>
+        </div>
+
+        <!-- Display Cluster Proportion Pie Chart -->
+        <div class="chart-container">
+            <canvas id="pieChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        // Get data from Flask
+        const clusterDistribution = {{ cluster_distribution|tojson }};  
+        const genres = {{ genres|tojson }};
+        const clusterTerms = {{ cluster_terms|tojson }};
+
+        // Generate fake average time spent per cluster (for illustration)
+        const averageTimeSpent = {};
+        Object.keys(clusterDistribution).forEach(cluster => {
+            averageTimeSpent[cluster] = Math.floor(Math.random() * 50) + 10; // Simulate 10-60 minutes
+        });
+
+        // Prepare data for the cluster distribution bar chart
+        const clusterLabels = Object.keys(clusterDistribution);
+        const clusterValues = Object.values(clusterDistribution);
+
+        // Create the bar chart for cluster distribution
+        const ctxBar = document.getElementById('clusterChart').getContext('2d');
+        const clusterChart = new Chart(ctxBar, {
+            type: 'bar',
+            data: {
+                labels: clusterLabels,
+                datasets: [{
+                    label: 'Number of Items per Cluster',
+                    data: clusterValues,
+                    backgroundColor: '#4CAF50',
+                    borderColor: '#388E3C',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(tooltipItem) {
+                                return `Cluster ${tooltipItem.label}: ${tooltipItem.raw} items`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Number of Items'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Create the bar chart for average time spent per cluster
+        const ctxTime = document.getElementById('timeChart').getContext('2d');
+        const timeChart = new Chart(ctxTime, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(averageTimeSpent),
+                datasets: [{
+                    label: 'Average Time Spent (minutes)',
+                    data: Object.values(averageTimeSpent),
+                    backgroundColor: '#FF9800',
+                    borderColor: '#E65100',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(tooltipItem) {
+                                return `Cluster ${tooltipItem.label}: ${tooltipItem.raw} min`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Minutes'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Create the pie chart for cluster proportions
+        const ctxPie = document.getElementById('pieChart').getContext('2d');
+        const pieChart = new Chart(ctxPie, {
+            type: 'pie',
+            data: {
+                labels: clusterLabels,
+                datasets: [{
+                    label: 'Cluster Proportions',
+                    data: clusterValues,
+                    backgroundColor: [
+                        '#FF6384', '#36A2EB', '#FFCE56', '#4CAF50', '#FF5722', '#9C27B0'
+                    ],
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(tooltipItem) {
+                                return `Cluster ${tooltipItem.label}: ${tooltipItem.raw} items`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+
+</body>
+</html>
