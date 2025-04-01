@@ -31,8 +31,8 @@ load_dotenv()
 reddit = None
 
 # Hardcoded Google API credentials
-GOOGLE_API_KEY = "AIzaSyDhVYI_4Z-6UIu3iZp5GC7Hk1BwcsyMGF0"
-GOOGLE_CSE_ID = "77c8cd364d2cd4360"
+GOOGLE_API_KEY = "Your Google APi key"
+GOOGLE_CSE_ID = "Your google custom search API"
 
 # Define the scope for YouTube API
 SCOPES = ['https://www.googleapis.com/auth/youtube.readonly']
